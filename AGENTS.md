@@ -9,3 +9,7 @@
 - `build`: `next build`
 - `lint`: `next lint`
 - `start`: `next start`
+
+## Notes
+
+- AGENTS.md is synced from Launchpad memory during chore commits
