@@ -14,3 +14,4 @@
 
 - Documentation structure now includes PRD, architecture specs, and sprint planning as a 'plan pack'
 - Database schema migration work has been established
+- AGENTS.md synced as part of Launchpad memory updates
