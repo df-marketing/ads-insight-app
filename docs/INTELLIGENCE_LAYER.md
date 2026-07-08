@@ -1,58 +1,42 @@
 # Intelligence Layer — ads-insight-app
 
-## Messy Inputs
-- Raw CSV with inconsistent column names ("Cost" vs "Spend" vs "Amount Spent")
-- Missing values, date format variation, extra header rows
-- No context about what changed (creative, budget, audience)
+## Messy Input
+Raw CSV rows from ad platforms — inconsistent column names, mixed date formats, varying metrics (ROAS, CPA, CTR, open rate, ROMI, etc.).
 
 ## Auto-Structure Schema
-Before calling the AI, the server normalises CSV rows into this payload:
+Before calling AI, the server normalises the CSV into:
 ```json
 {
-  "campaign": "Meta – Spring Promo",
-  "platform": "Meta",
-  "period": { "start": "2024-03-24", "end": "2024-03-31" },
-  "metrics": {
-    "spend": 1350,
-    "impressions": 91000,
-    "clicks": 2548,
-    "conversions": 51,
-    "ctr": 2.80,
-    "cpl": 26.47,
-    "cpa": 26.47,
-    "roas": 5.10
-  },
-  "prior_period_metrics": {
-    "ctr": 2.40, "cpl": 31.58, "roas": 4.20
+  "filename": "q1_marketing_performance.csv",
+  "columns": ["date", "campaign", "impressions", "clicks", "ctr", "spend", "conversions", "cpa", "roas"],
+  "row_count": 90,
+  "sample_rows": [
+    {"date": "2024-01-01", "campaign": "Brand Search", "impressions": 12400, "clicks": 384, "ctr": 0.031, "spend": 540, "conversions": 38, "cpa": 14.2, "roas": 4.1}
+  ],
+  "aggregates": {
+    "total_spend": 48200,
+    "total_conversions": 3100,
+    "avg_ctr": 0.029,
+    "avg_roas": 4.2
   }
 }
 ```
 
 ## Events to Track
 - CSV uploaded
-- Parsing succeeded / failed
-- AI analysis requested
-- Insight generated (confidence scored)
-- Report copied / exported
+- AI analysis started / completed / errored
+- Insight reviewed (accepted / flagged)
 
-## Scoring Rules (v1 — rule-based first)
-| Signal | Rule |
-|--------|------|
-| ROAS delta | >10% improvement → highlight green |
-| CPL delta | >10% drop → positive insight |
-| CTR | <1% → flag as low engagement |
-| Conversions WoW | >20% drop → flag as alert |
+## Scoring Rules (v1 — rule-based)
+| Rule | Score |
+|---|---|
+| category = `risk` | +20 |
+| `\|change_percent\|` > 20% | +15 |
+| category = `efficiency` | +10 |
+| `change_direction = 'down'` on a positive metric | +10 |
 
-AI confidence score stored on every generated field; anything <0.75 shown with a "Review recommended" badge.
+Higher `priority_score` → rendered first. No ML required in v1.
 
-## What Gets Ranked
-- Insight bullets ordered by magnitude of delta (largest change first)
-- Campaigns on the report list ordered by ROAS desc
-
-## v1 vs Later
-| v1 | Later |
-|----|-------|
-| Single-period analysis | Multi-period trend lines |
-| Rule-based delta badges | AI anomaly detection |
-| Plain insight bullets | A/B test statistical significance |
-| Manual note field | AI context extraction from notes |
+## V1 vs Later
+- **V1:** Rule-based priority score; single-file analysis; OpenAI prompt returns structured JSON
+- **Later:** Learned scoring from user accept/flag patterns; cross-file trend detection; domain-specific prompt tuning

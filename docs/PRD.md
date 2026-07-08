@@ -1,37 +1,34 @@
 # Product Requirements — ads-insight-app
 
 ## Problem
-Media buyers and marketers spend hours manually reading campaign data, writing performance summaries, and turning spreadsheets into stakeholder-ready reports. This app automates that: upload a CSV, get a plain-English analysis and a copy-ready report in seconds.
+Marketers and small business owners receive CSV reports from ad platforms but lack the time or skill to extract meaning. They end up either ignoring the data or spending hours manually reading spreadsheets.
 
-## Target Users
-- Performance marketers / media buyers
-- Marketing analysts
-- Founders reviewing their own ad spend
-- Non-technical clients who need simple explanations
+## Target User
+A solo marketer or business owner who runs paid ads, receives weekly/monthly CSV exports, and wants instant clarity on what worked, what didn't, and what to do next — with no data analysis background.
 
 ## Core Objects
-- **Upload** — the raw CSV file event
-- **Campaign** — a named ad campaign (Meta, Google, etc.)
-- **Metrics** — per-date performance rows (spend, impressions, clicks, conversions, CTR, CPL, CPA, ROAS)
-- **Insight** — AI-generated summary, bullets, and why-explanation for a campaign
-- **Report** — the final formatted narrative, ready to copy/export
+| Object | What it represents |
+|---|---|
+| `report` | An uploaded CSV file and its metadata |
+| `insight` | A single AI-generated finding from a report |
+| `upload_event` | A log entry for each step of the upload/analysis process |
 
-## MVP Checklist (v1 must-haves)
-- [ ] CSV upload with parsing and column mapping
-- [ ] Parsed data preview table before analysis
-- [ ] AI analysis: performance summary + insight bullets + why-explanation
-- [ ] Insight cards showing key metric deltas
-- [ ] Ready-to-send report view with one-click copy
-- [ ] Demo dataset pre-loaded (app works without a login)
-- [ ] Graceful empty/error/loading states
+## MVP Must-Haves (v1)
+- [ ] Upload a CSV file (marketing report format)
+- [ ] Auto-detect column names and row count
+- [ ] Generate AI insight cards: metric name, value, change direction, plain-language explanation
+- [ ] Display insights ranked by priority score
+- [ ] Reports list showing all past uploads
+- [ ] User can mark an insight as accepted or flagged
+- [ ] Handles empty, error, and loading states on every screen
+- [ ] Demo reports visible to anonymous visitors — no login required
 
 ## Non-Goals (v1)
-- Meta / Google Ads API direct connection
-- User login and per-user history
-- PDF/Markdown export
-- Email or Slack delivery
-- Multi-user teams
-- Predictive ML or budget forecasting
+- User accounts or authentication
+- Non-CSV data sources or live integrations
+- PDF export, email delivery, or sharing
+- Multi-file trend comparisons
+- Team or multi-user workspaces
 
-## Success Scenario
-A visitor lands on the app, clicks "Try demo data", sees three real campaigns with metric cards and AI-generated insight bullets, opens the ready-to-send report for one campaign, and copies the narrative to their clipboard — all within 30 seconds, no login required.
+## Definition of Done
+**Success scenario (pass/fail):** A user uploads `q1_marketing_performance.csv` → within 10 seconds, at least 3 insight cards appear showing metric name, change direction, and a plain-language explanation → the user flags one insight → the flagged status persists after page refresh.

@@ -1,29 +1,30 @@
 # Test Plan — ads-insight-app
 
-## v1 Success Scenario (manual walkthrough)
-1. Open the app — **expect:** 3 demo campaign cards visible, no login prompt
-2. Click "Try demo data" banner — **expect:** demo campaign pre-selected
-3. Click **Analyse** on the demo campaign — **expect:** loading skeleton appears, then insight cards render
-4. Check Insight Cards — **expect:** CTR, CPL, CPA, ROAS shown with ↑/↓ delta badges
-5. Read Performance Summary block — **expect:** 2–4 sentence AI narrative present
-6. Open Ready-to-Send Report — **expect:** clean formatted report with headline, bullets, narrative
-7. Click **Copy report** — **expect:** clipboard receives formatted text (paste into Notes to verify)
-8. Upload `demo_meta_q1.csv` via drag-and-drop — **expect:** parsed preview table shows columns
-9. Confirm upload — **expect:** new campaign row appears on home page
-10. Click **Analyse** on new upload — **expect:** full insight + report generated and stored
+## Success Scenario (manual walkthrough)
 
-## Empty States
-- Visit `/reports` with no uploads → show "No reports yet — upload a CSV to get started"
-- Upload a CSV with zero data rows → show "No metric rows found. Check your file and try again."
-- Campaigns with no metrics → insight cards show "—" not blank or 0
+1. Open the app at `/` — seed demo reports visible without logging in ✅
+2. Click a demo report → insight cards load with metric name, change badge, explanation ✅
+3. Click "Upload Report" → file picker opens ✅
+4. Select `q1_marketing_performance.csv` (valid, < 10 MB) → progress indicator shows ✅
+5. After upload: redirected to new report detail page with `status = processing` skeleton ✅
+6. Within 10 s: ≥3 insight cards appear, sorted highest priority first ✅
+7. Click "Flag" on one insight → badge updates to `flagged` immediately ✅
+8. Refresh page → flagged status still shows (DB persisted) ✅
+9. Click "Delete Report" → confirm dialog appears → confirm → redirected to list → report gone ✅
+10. Report no longer appears in reports list ✅
 
-## Error Cases
-- Upload a `.pdf` file → "Unsupported file type. Please upload a CSV."
-- Upload a CSV missing required columns (spend, clicks) → list missing columns by name
-- OpenAI API timeout → show rule-based metric cards; narrative block shows "AI analysis unavailable — showing raw data."
-- Delete report → confirm modal shown; after confirm, row gone from list; audit log entry present in Supabase
+## Empty State Tests
+- Fresh load with no uploads beyond seed data → reports list shows "Upload your first report" CTA ✅
+- Report with `status = error` → detail page shows error message + retry button ✅
 
-## Edge Cases
-- Very large CSV (1000+ rows) → upload completes; only first/last period rows used for comparison
-- All metric values are zero → delta badges show "—" not NaN or Infinity
-- ROAS column absent in CSV → card hidden, not broken
+## Error / Edge Case Tests
+- Upload a `.jpg` file → rejected at client with "Please upload a CSV file" ✅
+- Upload a CSV > 10 MB → blocked before upload with size error message ✅
+- Upload a CSV with unrecognised columns (e.g., a contacts export) → API returns structured error → UI shows "We couldn't read this file" message ✅
+- Simulate OpenAI timeout: mock 35 s delay → UI shows "Analysis is taking longer than expected" with retry ✅
+- Click "Accept" and "Flag" on the same insight in sequence → only the last status persists ✅
+
+## Security Checks
+- Open browser DevTools → Network tab → confirm `OPENAI_API_KEY` never appears in any request or response ✅
+- Inspect JS bundle → confirm no `service_role` key present ✅
+- Check Supabase Storage bucket policy: direct public URL for CSV file returns 403 (private bucket) ✅

@@ -1,38 +1,33 @@
 # Agentic Layer — ads-insight-app
 
-## Risk Levels & Actions
+## Risk Classification
 
-### Low risk — auto-execute (no approval needed)
-- **generate_insight** — call OpenAI, write result to `insights` table
-- **generate_report** — compose narrative from insight, write to `reports` table
-- **tag_campaign_platform** — detect platform from CSV headers, write to `campaigns.platform`
-- **score_metrics** — compute delta percentages, write rule-based flags
-
-### Medium risk — show draft, user confirms
-- **rename_report** — edits `reports.title`; shown as editable field before save
-- **mark_insight_approved** — sets `review_status = 'approved'`; one-click confirm
-
-### High risk — always requires explicit approval
-- **delete_report** — shows confirmation modal; logs to `audit_logs` on confirm
-- **delete_upload** — cascades to campaigns + metrics; explicit confirm required
-
-### Critical — human-only (not in v1)
-- Sending reports externally (email, Slack) — added in a later sprint with full approval flow
+| Action | Risk | Approval |
+|---|---|---|
+| Generate insight summary from CSV | Low | Auto |
+| Tag insight category | Low | Auto |
+| Score and rank insights | Low | Auto |
+| Mark insight as accepted / flagged | Low | User click (immediate) |
+| Retry failed AI analysis | Low | User click |
+| Delete a report and its insights | High | Confirm dialog → persists to DB |
+| Send insight summary by email (later) | Medium | User approval |
+| Charge for premium analysis (later) | Critical | Human only |
 
 ## Named Tools (v1)
-| Tool | Action |
-|------|--------|
-| `csv_parser` | Parse and normalise uploaded file |
-| `openai_analyse` | POST to OpenAI with structured payload |
-| `insight_writer` | Write insight rows to Supabase |
-| `report_builder` | Compose and store Markdown report |
-| `audit_logger` | Append row to `audit_logs` |
+- `parse_csv` — reads Storage file, returns normalised JSON
+- `generate_insights` — sends normalised JSON to OpenAI, returns insight array
+- `save_insights` — writes insight rows to Supabase
+- `update_review_status` — sets `review_status` on a single insight row
 
-No `run_any` or `eval` permitted. Every tool call is named and logged.
+No `run_any` or `eval` equivalents permitted.
 
-## Audit Log Fields
-`action` · `object_type` · `object_id` · `user_id` · `detail` (JSON snapshot) · `created_at`
+## Audit Log Fields (upload_events)
+- `event_type` — what happened
+- `report_id` — which report
+- `user_id` — who (null until auth sprint)
+- `detail` — relevant metadata (file size, insight count, error message)
+- `created_at` — immutable timestamp
 
-## v1 vs Later
-- v1: auto-generate insight + report on user trigger
-- Later: scheduled re-analysis, diff against prior report, Slack delivery with approval step
+## V1 vs Later
+- **V1:** Auto-generate insights on upload; user manually reviews
+- **Later:** Agent drafts recommended actions ("pause this campaign"), requires user approval before any external action
